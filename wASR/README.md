@@ -8,7 +8,7 @@ The wASR package is designed for performing weighted ancestral state reconstruct
 
 1. Clone the repository:
    ```bash
-git clone https://github.com/wASR_framework.git
+git clone https://github.com/zheminzhou/wASR_framework.git
 cd wASR_framework/wASR
    ```
 
