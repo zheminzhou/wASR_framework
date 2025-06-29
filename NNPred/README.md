@@ -29,7 +29,7 @@ pip install pandas numpy click matplotlib scikit-learn multiprocess
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/wASR_framework.git
+git clone https://github.com/zheminzhou/wASR_framework.git
 cd wASR_framework/NNPred
 ```
 
