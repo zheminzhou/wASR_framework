@@ -1,4 +1,4 @@
-\# DivHMM Genomic Analysis Pipeline
+# DivHMM Genomic Analysis Pipeline
 
 
 
@@ -6,19 +6,19 @@ This repository contains a collection of Python scripts designed to analyze muta
 
 
 
-\## Overview
+## Overview
 
 
 
 The pipeline takes as input genomic data including mutation files, gene annotations, diversified and recombining region files, and phylogenetic trees. It processes these to:
 
-\- Identify genes overlapping with mutation hotspots.
+- Identify genes overlapping with mutation hotspots.
 
-\- Associate mutations with geographic or temporal traits.
+- Associate mutations with geographic or temporal traits.
 
-\- Perform enrichment analyses for genes and KEGG Orthology (KO) terms.
+- Perform enrichment analyses for genes and KEGG Orthology (KO) terms.
 
-\- Compute similarities between geographic regions based on shared mutation hotspots.
+- Compute similarities between geographic regions based on shared mutation hotspots.
 
 
 
@@ -26,111 +26,57 @@ The scripts are designed to be run sequentially or in combination, depending on 
 
 
 
-\## Scripts and Their Functions
+## Scripts and Their Functions
 
 
 
-\### 1. `DivHMM\_region\_annotation.py`
+### 1. `DivHMM_region_annotation.py`
 
-\*\*Purpose\*\*: Identifies genes overlapping with diversified regions and annotates them with mutation counts.
-
-
-
-\*\*Functionality\*\*:
-
-\- Reads diversified regions (`-d`, `\*.diversified.region`) and recombining regions (`-r`, `\*.recombination.region`) to identify genomic segments with high mutation rates.
-
-\- Processes a GFF file (`-g`) to extract gene annotations and associate them with genomic positions.
-
-\- Reads mutation data (`-m`, `\*.mutations.gz`) to count mutations (SNPs and indels) within diversified regions.
-
-\- Assigns mutations to genes based on their genomic coordinates.
-
-\- Outputs a file (`-o`) with annotations for each diversified region, including the contig, start/end positions, mutation counts (SNPs and indels), and associated genes.
+**Purpose**: Identifies genes overlapping with diversified regions and annotates them with mutation counts.
 
 
 
-\*\*Inputs\*\*:
+**Functionality**:
 
-\- `-d`/`--dhmm`: File containing diversified regions.
+- Reads diversified regions (`-d`, `*.diversified.region`) and recombining regions (`-r`, `*.recombination.region`) to identify genomic segments with high mutation rates.
 
-\- `-r`/`--rhmm`: File containing recombining regions.
+- Processes a GFF file (`-g`) to extract gene annotations and associate them with genomic positions.
 
-\- `-m`/`--mutation`: Gzip-compressed mutation file.
+- Reads mutation data (`-m`, `*.mutations.gz`) to count mutations (SNPs and indels) within diversified regions.
 
-\- `-g`/`--gff`: GFF file for gene annotations.
+- Assigns mutations to genes based on their genomic coordinates.
 
-\- `-t`/`--gene\_tag`: Tag for gene identifiers in GFF (default: `locus\_tag`).
-
-\- `-o`/`--outfile`: Output file (default: derived from input `dhmm` file with `.annotations` suffix).
+- Outputs a file (`-o`) with annotations for each diversified region, including the contig, start/end positions, mutation counts (SNPs and indels), and associated genes.
 
 
 
-\*\*Outputs\*\*:
+**Inputs**:
 
-\- A tab-delimited file listing diversified regions with mutation counts and associated genes.
+- `-d`/`--dhmm`: File containing diversified regions.
 
+- `-r`/`--rhmm`: File containing recombining regions.
 
+- `-m`/`--mutation`: Gzip-compressed mutation file.
 
-\*\*Usage in Pipeline\*\*:
+- `-g`/`--gff`: GFF file for gene annotations.
 
-\- This script is typically the first step to annotate diversified regions with gene information.
+- `-t`/`--gene_tag`: Tag for gene identifiers in GFF (default: `locus_tag`).
 
-\- Its output is used by downstream scripts like `DivHMM\_to\_genes\_KO\_enrichment.py` for further gene-based analyses.
-
-
-
----
+- `-o`/`--outfile`: Output file (default: derived from input `dhmm` file with `.annotations` suffix).
 
 
 
-\### 2. `DivHMM\_to\_genes.py`
+**Outputs**:
 
-\*\*Purpose\*\*: Extends `DivHMM\_region\_annotation.py` by associating genes with KEGG Orthology (KO) identifiers and categorizing mutations by region type (normal, diversified, or recombining).
-
-
-
-\*\*Functionality\*\*:
-
-\- Similar to `DivHMM\_region\_annotation.py`, it reads diversified (`-d`) and recombining (`-r`) regions, mutation data (`-m`), and GFF annotations (`-g`).
-
-\- Incorporates a KO list (`-k`) to map genes to KEGG Orthology identifiers.
-
-\- Categorizes mutations into normal, diversified (`inDiv`), or recombining (`inRec`) regions and assigns mutation types (e.g., synonymous, nonsynonymous, frameshift) to genes.
-
-\- Outputs a file (`-o`) with gene details, including KO identifiers, genomic coordinates, strand, and mutation counts for each region type.
+- A tab-delimited file listing diversified regions with mutation counts and associated genes.
 
 
 
-\*\*Inputs\*\*:
+**Usage in Pipeline**:
 
-\- `-d`/`--dhmm`: Diversified regions file.
+- This script is typically the first step to annotate diversified regions with gene information.
 
-\- `-r`/`--rhmm`: Recombining regions file.
-
-\- `-m`/`--mutation`: Gzip-compressed mutation file.
-
-\- `-g`/`--gff`: GFF file for gene annotations.
-
-\- `-t`/`--gene\_tag`: Tag for gene identifiers (default: `locus\_tag`).
-
-\- `-k`/`--ko\_list`: File mapping genes to KO identifiers.
-
-\- `-o`/`--outfile`: Output file (default: derived from `dhmm` file with `.related\_genes` suffix).
-
-
-
-\*\*Outputs\*\*:
-
-\- A tab-delimited file listing genes with their KO identifiers, genomic coordinates, and mutation counts in normal, diversified, and recombining regions.
-
-
-
-\*\*Usage in Pipeline\*\*:
-
-\- Builds on `DivHMM\_region\_annotation.py` by adding KO annotations.
-
-\- Its output (`\*.related\_genes`) is used by `DivHMM\_to\_genes\_KO\_enrichment.py` and `DivHMM\_to\_trait\_gene\_enrichment.py` for enrichment analyses.
+- Its output is used by downstream scripts like `DivHMM_to_genes_KO_enrichment.py` for further gene-based analyses.
 
 
 
@@ -138,107 +84,53 @@ The scripts are designed to be run sequentially or in combination, depending on 
 
 
 
-\### 3. `DivHMM\_to\_genes\_KO\_enrichment.py`
+### 2. `DivHMM_to_genes.py`
 
-\*\*Purpose\*\*: Performs KEGG Orthology (KO) enrichment analysis for genes associated with diversified and recombining regions.
-
-
-
-\*\*Functionality\*\*:
-
-\- Reads the output from `DivHMM\_to\_genes.py` (`-d`, `\*.diversified.related\_genes`) to extract genes and their mutation profiles.
-
-\- Uses a KEGG BRITE hierarchy file (`-k`, default: `/titan/softwares/RecHMM/ko00001.json`) to group genes by functional categories.
-
-\- Performs Fisher’s exact test to identify KO categories enriched in diversified or recombining regions compared to a baseline (all genes).
-
-\- Applies false discovery rate (FDR) correction to p-values.
-
-\- Outputs enrichment results (`-o`), including mutation statistics and enriched KO categories with p-values and FDR-corrected q-values.
+**Purpose**: Extends `DivHMM_region_annotation.py` by associating genes with KEGG Orthology (KO) identifiers and categorizing mutations by region type (normal, diversified, or recombining).
 
 
 
-\*\*Inputs\*\*:
+**Functionality**:
 
-\- `-d`/`--dhmm\_genes`: Output file from `DivHMM\_to\_genes.py`.
+- Similar to `DivHMM_region_annotation.py`, it reads diversified (`-d`) and recombining (`-r`) regions, mutation data (`-m`), and GFF annotations (`-g`).
 
-\- `-k`/`--ko\_brite`: KEGG BRITE hierarchy file (JSON format).
+- Incorporates a KO list (`-k`) to map genes to KEGG Orthology identifiers.
 
-\- `-o`/`--outfile`: Output file (default: derived from `dhmm\_genes` with `.enrichment` suffix).
+- Categorizes mutations into normal, diversified (`inDiv`), or recombining (`inRec`) regions and assigns mutation types (e.g., synonymous, nonsynonymous, frameshift) to genes.
 
-
-
-\*\*Outputs\*\*:
-
-\- A file containing mutation statistics (e.g., dN/dS, pseudogene ratios) and enriched KO categories with statistical significance.
+- Outputs a file (`-o`) with gene details, including KO identifiers, genomic coordinates, strand, and mutation counts for each region type.
 
 
 
-\*\*Usage in Pipeline\*\*:
+**Inputs**:
 
-\- Takes the output of `DivHMM\_to\_genes.py` to perform functional enrichment analysis.
+- `-d`/`--dhmm`: Diversified regions file.
 
-\- Results are useful for understanding the biological significance of mutation hotspots.
+- `-r`/`--rhmm`: Recombining regions file.
 
+- `-m`/`--mutation`: Gzip-compressed mutation file.
 
+- `-g`/`--gff`: GFF file for gene annotations.
 
----
+- `-t`/`--gene_tag`: Tag for gene identifiers (default: `locus_tag`).
 
+- `-k`/`--ko_list`: File mapping genes to KO identifiers.
 
-
-\### 4. `DivHMM\_to\_trait.py`
-
-\*\*Purpose\*\*: Associates mutations in diversified and recombining regions with geographic or other traits using phylogenetic tree information.
-
-
-
-\*\*Functionality\*\*:
-
-\- Reads diversified (`-d`) and recombining (`-r`) regions, mutation data (`-m`), a phylogenetic tree (`-t`), and a treetime nexus file (`-n`) for temporal or trait annotations.
-
-\- Maps mutations to branches of the phylogenetic tree and categorizes them by region type (normal, diversified, or recombining) and mutation type (e.g., synonymous, nonsynonymous).
-
-\- Uses trait conversion dictionaries (`Bp\_conv`, `ParaA\_conv`, `TB\_conv`) to map sample locations to geographic regions.
-
-\- Performs Fisher’s exact test to identify traits (e.g., geographic regions) enriched for mutations in diversified regions.
-
-\- Outputs a CSV file (`-p`.trait\_mutations.csv) with mutation counts per trait and region, and an enrichment file (`-p`.trait\_mutations.enrichment) with statistically significant trait associations.
+- `-o`/`--outfile`: Output file (default: derived from `dhmm` file with `.related_genes` suffix).
 
 
 
-\*\*Inputs\*\*:
+**Outputs**:
 
-\- `-p`/`--prefix`: Prefix for output files.
-
-\- `-n`/`--nexus`: Treetime nexus file with trait annotations.
-
-\- `-R`/`--root\_node`: Root node for the tree (optional).
-
-\- `-t`/`--tree`: Original phylogenetic tree file.
-
-\- `-m`/`--mutations`: Gzip-compressed mutation file.
-
-\- `-r`/`--rhmm`: Recombining regions file.
-
-\- `-d`/`--dhmm`: Diversified regions file.
-
-\- `-D`/`--direction`: Tree traversal direction (`up` or `down`, default: `down`).
+- A tab-delimited file listing genes with their KO identifiers, genomic coordinates, and mutation counts in normal, diversified, and recombining regions.
 
 
 
-\*\*Outputs\*\*:
+**Usage in Pipeline**:
 
-\- `prefix.trait\_mutations.csv`: Mutation counts per trait and region.
+- Builds on `DivHMM_region_annotation.py` by adding KO annotations.
 
-\- `prefix.trait\_mutations.enrichment`: Enrichment results for traits with significant mutation associations.
-
-
-
-\*\*Usage in Pipeline\*\*:
-
-\- Analyzes mutation patterns in the context of phylogenetic traits (e.g., geographic origins).
-
-\- Its enrichment output is used by `DivHMM\_to\_trait\_gene\_enrichment.py`.
+- Its output (`*.related_genes`) is used by `DivHMM_to_genes_KO_enrichment.py` and `DivHMM_to_trait_gene_enrichment.py` for enrichment analyses.
 
 
 
@@ -246,101 +138,47 @@ The scripts are designed to be run sequentially or in combination, depending on 
 
 
 
-\### 5. `DivHMM\_to\_trait\_gene\_enrichment.py`
+### 3. `DivHMM_to_genes_KO_enrichment.py`
 
-\*\*Purpose\*\*: Identifies genes and KO terms associated with geographically enriched mutation hotspots.
-
-
-
-\*\*Functionality\*\*:
-
-\- Reads the enrichment output from `DivHMM\_to\_trait.py` (`-g`, `\*.trait\_mutations.enrichment`) to identify significantly enriched geographic regions.
-
-\- Reads the gene annotations from `DivHMM\_to\_genes.py` (`-k`, `\*.related\_genes`) to map genes and KO terms to genomic coordinates.
-
-\- Identifies genes overlapping with enriched diversified regions and associates them with geographic traits.
-
-\- Outputs a file (`-p`.DHMM.geo\_gene.enrichment) listing genes, their KO identifiers, and associated geographic regions.
+**Purpose**: Performs KEGG Orthology (KO) enrichment analysis for genes associated with diversified and recombining regions.
 
 
 
-\*\*Inputs\*\*:
+**Functionality**:
 
-\- `-p`/`--prefix`: Prefix for output files.
+- Reads the output from `DivHMM_to_genes.py` (`-d`, `*.diversified.related_genes`) to extract genes and their mutation profiles.
 
-\- `-g`/`--geo\_enrichment`: Enrichment file from `DivHMM\_to\_trait.py`.
+- Uses a KEGG BRITE hierarchy file (`-k`, default: `/titan/softwares/RecHMM/ko00001.json`) to group genes by functional categories.
 
-\- `-k`/`--gene\_kos`: Gene annotations file from `DivHMM\_to\_genes.py`.
+- Performs Fisher’s exact test to identify KO categories enriched in diversified or recombining regions compared to a baseline (all genes).
 
+- Applies false discovery rate (FDR) correction to p-values.
 
-
-\*\*Outputs\*\*:
-
-\- `prefix.DHMM.geo\_gene.enrichment`: Tab-delimited file listing genes, KO identifiers, and associated geographic regions.
+- Outputs enrichment results (`-o`), including mutation statistics and enriched KO categories with p-values and FDR-corrected q-values.
 
 
 
-\*\*Usage in Pipeline\*\*:
+**Inputs**:
 
-\- Links geographic enrichment results from `DivHMM\_to\_trait.py` with gene annotations from `DivHMM\_to\_genes.py`.
+- `-d`/`--dhmm_genes`: Output file from `DivHMM_to_genes.py`.
 
-\- Provides a detailed mapping of genes to geographic mutation hotspots.
+- `-k`/`--ko_brite`: KEGG BRITE hierarchy file (JSON format).
 
-
-
----
+- `-o`/`--outfile`: Output file (default: derived from `dhmm_genes` with `.enrichment` suffix).
 
 
 
-\### 6. `DivHMM\_to\_timed.py`
+**Outputs**:
 
-\*\*Purpose\*\*: Analyzes mutation rates in diversified and recombining regions over time using a timed phylogenetic tree.
-
-
-
-\*\*Functionality\*\*:
-
-\- Similar to `DivHMM\_to\_trait.py`, it reads diversified (`-d`), recombining (`-r`), mutation (`-m`), tree (`-t`), and nexus (`-n`) files.
-
-\- Maps mutations to branches of a timed phylogenetic tree and categorizes them by region type and mutation type.
-
-\- Aggregates mutation rates over time intervals (years) and computes confidence intervals for mutation rates in diversified and recombining regions relative to normal regions.
-
-\- Outputs a CSV file (`-p`.timed\_mutations.csv) with mutation rates and confidence intervals for each time interval.
+- A file containing mutation statistics (e.g., dN/dS, pseudogene ratios) and enriched KO categories with statistical significance.
 
 
 
-\*\*Inputs\*\*:
+**Usage in Pipeline**:
 
-\- `-p`/`--prefix`: Prefix for output files.
+- Takes the output of `DivHMM_to_genes.py` to perform functional enrichment analysis.
 
-\- `-n`/`--nexus`: Treetime nexus file with temporal annotations.
-
-\- `-R`/`--root\_node`: Root node for the tree (optional).
-
-\- `-t`/`--tree`: Original phylogenetic tree file.
-
-\- `-m`/`--mutations`: Gzip-compressed mutation file.
-
-\- `-r`/`--rhmm`: Recombining regions file.
-
-\- `-d`/`--dhmm`: Diversified regions file.
-
-\- `-D`/`--direction`: Tree traversal direction (`up` or `down`, default: `down`).
-
-
-
-\*\*Outputs\*\*:
-
-\- `prefix.timed\_mutations.csv`: Mutation rates and confidence intervals over time.
-
-
-
-\*\*Usage in Pipeline\*\*:
-
-\- Provides temporal analysis of mutation rates, complementing the geographic analysis in `DivHMM\_to\_trait.py`.
-
-\- Can be used independently or alongside other scripts for evolutionary studies.
+- Results are useful for understanding the biological significance of mutation hotspots.
 
 
 
@@ -348,41 +186,59 @@ The scripts are designed to be run sequentially or in combination, depending on 
 
 
 
-\### 7. `DivHMM\_to\_trait\_region\_network.py`
+### 4. `DivHMM_to_trait.py`
 
-\*\*Purpose\*\*: Computes similarities between geographic regions based on shared mutation hotspots.
-
-
-
-\*\*Functionality\*\*:
-
-\- Reads the enrichment output from `DivHMM\_to\_trait.py` (`input\_file`) to identify significantly enriched regions (q-value < 0.01, %pos > %neg).
-
-\- Calculates the proportion of shared diversified regions between pairs of geographic regions using a modified Jukes-Cantor distance.
-
-\- Outputs a CSV file (`--output`) listing pairs of regions and their similarity scores, sorted by similarity.
+**Purpose**: Associates mutations in diversified and recombining regions with geographic or other traits using phylogenetic tree information.
 
 
 
-\*\*Inputs\*\*:
+**Functionality**:
 
-\- `input\_file`: Enrichment file from `DivHMM\_to\_trait.py`.
+- Reads diversified (`-d`) and recombining (`-r`) regions, mutation data (`-m`), a phylogenetic tree (`-t`), and a treetime nexus file (`-n`) for temporal or trait annotations.
 
-\- `--output`/`-o`: Output CSV file (optional; prints to stdout if not provided).
+- Maps mutations to branches of the phylogenetic tree and categorizes them by region type (normal, diversified, or recombining) and mutation type (e.g., synonymous, nonsynonymous).
+
+- Uses trait conversion dictionaries (`Bp_conv`, `ParaA_conv`, `TB_conv`) to map sample locations to geographic regions.
+
+- Performs Fisher’s exact test to identify traits (e.g., geographic regions) enriched for mutations in diversified regions.
+
+- Outputs a CSV file (`-p`.trait_mutations.csv) with mutation counts per trait and region, and an enrichment file (`-p`.trait_mutations.enrichment) with statistically significant trait associations.
 
 
 
-\*\*Outputs\*\*:
+**Inputs**:
 
-\- A CSV file with columns `country1`, `country2`, and `similarity`, or output to stdout.
+- `-p`/`--prefix`: Prefix for output files.
+
+- `-n`/`--nexus`: Treetime nexus file with trait annotations.
+
+- `-R`/`--root_node`: Root node for the tree (optional).
+
+- `-t`/`--tree`: Original phylogenetic tree file.
+
+- `-m`/`--mutations`: Gzip-compressed mutation file.
+
+- `-r`/`--rhmm`: Recombining regions file.
+
+- `-d`/`--dhmm`: Diversified regions file.
+
+- `-D`/`--direction`: Tree traversal direction (`up` or `down`, default: `down`).
 
 
 
-\*\*Usage in Pipeline\*\*:
+**Outputs**:
 
-\- Analyzes relationships between geographic regions based on shared mutation hotspots.
+- `prefix.trait_mutations.csv`: Mutation counts per trait and region.
 
-\- Complements `DivHMM\_to\_trait.py` by providing a network perspective on geographic associations.
+- `prefix.trait_mutations.enrichment`: Enrichment results for traits with significant mutation associations.
+
+
+
+**Usage in Pipeline**:
+
+- Analyzes mutation patterns in the context of phylogenetic traits (e.g., geographic origins).
+
+- Its enrichment output is used by `DivHMM_to_trait_gene_enrichment.py`.
 
 
 
@@ -390,7 +246,151 @@ The scripts are designed to be run sequentially or in combination, depending on 
 
 
 
-\## Pipeline Workflow
+### 5. `DivHMM_to_trait_gene_enrichment.py`
+
+**Purpose**: Identifies genes and KO terms associated with geographically enriched mutation hotspots.
+
+
+
+**Functionality**:
+
+- Reads the enrichment output from `DivHMM_to_trait.py` (`-g`, `*.trait_mutations.enrichment`) to identify significantly enriched geographic regions.
+
+- Reads the gene annotations from `DivHMM_to_genes.py` (`-k`, `*.related_genes`) to map genes and KO terms to genomic coordinates.
+
+- Identifies genes overlapping with enriched diversified regions and associates them with geographic traits.
+
+- Outputs a file (`-p`.DHMM.geo_gene.enrichment) listing genes, their KO identifiers, and associated geographic regions.
+
+
+
+**Inputs**:
+
+- `-p`/`--prefix`: Prefix for output files.
+
+- `-g`/`--geo_enrichment`: Enrichment file from `DivHMM_to_trait.py`.
+
+- `-k`/`--gene_kos`: Gene annotations file from `DivHMM_to_genes.py`.
+
+
+
+**Outputs**:
+
+- `prefix.DHMM.geo_gene.enrichment`: Tab-delimited file listing genes, KO identifiers, and associated geographic regions.
+
+
+
+**Usage in Pipeline**:
+
+- Links geographic enrichment results from `DivHMM_to_trait.py` with gene annotations from `DivHMM_to_genes.py`.
+
+- Provides a detailed mapping of genes to geographic mutation hotspots.
+
+
+
+---
+
+
+
+### 6. `DivHMM_to_timed.py`
+
+**Purpose**: Analyzes mutation rates in diversified and recombining regions over time using a timed phylogenetic tree.
+
+
+
+**Functionality**:
+
+- Similar to `DivHMM_to_trait.py`, it reads diversified (`-d`), recombining (`-r`), mutation (`-m`), tree (`-t`), and nexus (`-n`) files.
+
+- Maps mutations to branches of a timed phylogenetic tree and categorizes them by region type and mutation type.
+
+- Aggregates mutation rates over time intervals (years) and computes confidence intervals for mutation rates in diversified and recombining regions relative to normal regions.
+
+- Outputs a CSV file (`-p`.timed_mutations.csv) with mutation rates and confidence intervals for each time interval.
+
+
+
+**Inputs**:
+
+- `-p`/`--prefix`: Prefix for output files.
+
+- `-n`/`--nexus`: Treetime nexus file with temporal annotations.
+
+- `-R`/`--root_node`: Root node for the tree (optional).
+
+- `-t`/`--tree`: Original phylogenetic tree file.
+
+- `-m`/`--mutations`: Gzip-compressed mutation file.
+
+- `-r`/`--rhmm`: Recombining regions file.
+
+- `-d`/`--dhmm`: Diversified regions file.
+
+- `-D`/`--direction`: Tree traversal direction (`up` or `down`, default: `down`).
+
+
+
+**Outputs**:
+
+- `prefix.timed_mutations.csv`: Mutation rates and confidence intervals over time.
+
+
+
+**Usage in Pipeline**:
+
+- Provides temporal analysis of mutation rates, complementing the geographic analysis in `DivHMM_to_trait.py`.
+
+- Can be used independently or alongside other scripts for evolutionary studies.
+
+
+
+---
+
+
+
+### 7. `DivHMM_to_trait_region_network.py`
+
+**Purpose**: Computes similarities between geographic regions based on shared mutation hotspots.
+
+
+
+**Functionality**:
+
+- Reads the enrichment output from `DivHMM_to_trait.py` (`input_file`) to identify significantly enriched regions (q-value < 0.01, %pos > %neg).
+
+- Calculates the proportion of shared diversified regions between pairs of geographic regions using a modified Jukes-Cantor distance.
+
+- Outputs a CSV file (`--output`) listing pairs of regions and their similarity scores, sorted by similarity.
+
+
+
+**Inputs**:
+
+- `input_file`: Enrichment file from `DivHMM_to_trait.py`.
+
+- `--output`/`-o`: Output CSV file (optional; prints to stdout if not provided).
+
+
+
+**Outputs**:
+
+- A CSV file with columns `country1`, `country2`, and `similarity`, or output to stdout.
+
+
+
+**Usage in Pipeline**:
+
+- Analyzes relationships between geographic regions based on shared mutation hotspots.
+
+- Complements `DivHMM_to_trait.py` by providing a network perspective on geographic associations.
+
+
+
+---
+
+
+
+## Pipeline Workflow
 
 
 
@@ -398,87 +398,87 @@ The scripts are designed to work together in a modular pipeline. A typical workf
 
 
 
-1\. \*\*Annotate Diversified Regions with Genes\*\*:
+1. **Annotate Diversified Regions with Genes**:
 
-&nbsp;  - Run `DivHMM\_region\_annotation.py` to associate diversified regions with genes and mutation counts.
+&nbsp;  - Run `DivHMM_region_annotation.py` to associate diversified regions with genes and mutation counts.
 
-&nbsp;  - Output: `\*.annotations`
-
-
-
-2\. \*\*Add KO Annotations\*\*:
-
-&nbsp;  - Run `DivHMM\_to\_genes.py` to extend annotations with KO identifiers and categorize mutations by region type.
-
-&nbsp;  - Output: `\*.related\_genes`
+&nbsp;  - Output: `*.annotations`
 
 
 
-3\. \*\*Perform KO Enrichment Analysis\*\*:
+2. **Add KO Annotations**:
 
-&nbsp;  - Run `DivHMM\_to\_genes\_KO\_enrichment.py` to identify enriched KO categories in diversified and recombining regions.
+&nbsp;  - Run `DivHMM_to_genes.py` to extend annotations with KO identifiers and categorize mutations by region type.
 
-&nbsp;  - Input: Output from `DivHMM\_to\_genes.py`
-
-&nbsp;  - Output: `\*.enrichment`
+&nbsp;  - Output: `*.related_genes`
 
 
 
-4\. \*\*Associate Mutations with Traits\*\*:
+3. **Perform KO Enrichment Analysis**:
 
-&nbsp;  - Run `DivHMM\_to\_trait.py` to associate mutations with geographic or other traits using phylogenetic data.
+&nbsp;  - Run `DivHMM_to_genes_KO_enrichment.py` to identify enriched KO categories in diversified and recombining regions.
 
-&nbsp;  - Output: `\*.trait\_mutations.csv` and `\*.trait\_mutations.enrichment`
+&nbsp;  - Input: Output from `DivHMM_to_genes.py`
 
-
-
-5\. \*\*Map Genes to Enriched Geographic Regions\*\*:
-
-&nbsp;  - Run `DivHMM\_to\_trait\_gene\_enrichment.py` to link genes and KO terms to geographically enriched regions.
-
-&nbsp;  - Input: Outputs from `DivHMM\_to\_trait.py` and `DivHMM\_to\_genes.py`
-
-&nbsp;  - Output: `\*.DHMM.geo\_gene.enrichment`
+&nbsp;  - Output: `*.enrichment`
 
 
 
-6\. \*\*Analyze Temporal Mutation Rates\*\*:
+4. **Associate Mutations with Traits**:
 
-&nbsp;  - Run `DivHMM\_to\_timed.py` to analyze mutation rates over time (optional, if temporal analysis is needed).
+&nbsp;  - Run `DivHMM_to_trait.py` to associate mutations with geographic or other traits using phylogenetic data.
 
-&nbsp;  - Output: `\*.timed\_mutations.csv`
+&nbsp;  - Output: `*.trait_mutations.csv` and `*.trait_mutations.enrichment`
 
 
 
-7\. \*\*Compute Geographic Region Similarities\*\*:
+5. **Map Genes to Enriched Geographic Regions**:
 
-&nbsp;  - Run `DivHMM\_to\_trait\_region\_network.py` to calculate similarities between geographic regions based on shared mutation hotspots.
+&nbsp;  - Run `DivHMM_to_trait_gene_enrichment.py` to link genes and KO terms to geographically enriched regions.
 
-&nbsp;  - Input: Output from `DivHMM\_to\_trait.py`
+&nbsp;  - Input: Outputs from `DivHMM_to_trait.py` and `DivHMM_to_genes.py`
+
+&nbsp;  - Output: `*.DHMM.geo_gene.enrichment`
+
+
+
+6. **Analyze Temporal Mutation Rates**:
+
+&nbsp;  - Run `DivHMM_to_timed.py` to analyze mutation rates over time (optional, if temporal analysis is needed).
+
+&nbsp;  - Output: `*.timed_mutations.csv`
+
+
+
+7. **Compute Geographic Region Similarities**:
+
+&nbsp;  - Run `DivHMM_to_trait_region_network.py` to calculate similarities between geographic regions based on shared mutation hotspots.
+
+&nbsp;  - Input: Output from `DivHMM_to_trait.py`
 
 &nbsp;  - Output: CSV file with similarity scores.
 
 
 
-\## Dependencies
+## Dependencies
 
 
 
 The scripts rely on the following Python packages:
 
-\- `click`: For command-line interface.
+- `click`: For command-line interface.
 
-\- `pandas`, `numpy`: For data manipulation and statistical analysis.
+- `pandas`, `numpy`: For data manipulation and statistical analysis.
 
-\- `scipy.stats`: For Fisher’s exact test and FDR correction.
+- `scipy.stats`: For Fisher’s exact test and FDR correction.
 
-\- `ete3`, `ete3\_extensions`: For phylogenetic tree processing.
+- `ete3`, `ete3_extensions`: For phylogenetic tree processing.
 
-\- `keggtools`: For KEGG Orthology enrichment analysis.
+- `keggtools`: For KEGG Orthology enrichment analysis.
 
-\- `statsmodels`: For multiple testing correction.
+- `statsmodels`: For multiple testing correction.
 
-\- Standard libraries: `os`, `collections`, `gzip`, `re`, `json`.
+- Standard libraries: `os`, `collections`, `gzip`, `re`, `json`.
 
 
 
