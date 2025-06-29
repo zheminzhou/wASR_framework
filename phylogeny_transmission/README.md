@@ -29,8 +29,8 @@ To use this package, you need the following software and libraries installed:
 
 1. Clone the repository:
    ```bash
-git clone https://github.com/wASR_framework.git
-cd wASR_framework/phylogeny_transmission
+   git clone https://github.com/zheminzhou/wASR_framework.git
+   cd wASR_framework/phylogeny_transmission
    ```
 
 2. Install Python dependencies:
