@@ -1,171 +1,92 @@
 import numpy as np
 from Bio import Seq, SeqRecord
+from collections import defaultdict
 
-
-alphabet_synonyms = {'nuc':'nuc', 'nucleotide':'nuc', 'aa':'aa', 'aminoacid':'aa',
-                     'nuc_nogap':'nuc_nogap', 'nucleotide_nogap':'nuc_nogap',
-                     'aa_nogap':'aa_nogap', 'aminoacid_nogap':'aa_nogap',
-                     'DNA':'nuc', 'DNA_nogap':'nuc_nogap'}
-
-alphabets = {
-            "nuc":           np.array(['A', 'C', 'G', 'T', '-']),
-
-            "nuc_nogap":np.array(['A', 'C', 'G', 'T']),
-
-            "aa":            np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K',
-                                       'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V',
-                                       'W', 'Y', '*', '-']),
-
-            "aa_nogap": np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K',
-                                       'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V',
-                                       'W', 'Y'])
-            }
-
-profile_maps = {
-'nuc':{
-    'A': np.array([1, 0, 0, 0, 0], dtype='float'),
-    'C': np.array([0, 1, 0, 0, 0], dtype='float'),
-    'G': np.array([0, 0, 1, 0, 0], dtype='float'),
-    'T': np.array([0, 0, 0, 1, 0], dtype='float'),
-    '-': np.array([0, 0, 0, 0, 1], dtype='float'),
-    'N': np.array([1, 1, 1, 1, 1], dtype='float'),
-    'X': np.array([1, 1, 1, 1, 1], dtype='float'),
-    'R': np.array([1, 0, 1, 0, 0], dtype='float'),
-    'Y': np.array([0, 1, 0, 1, 0], dtype='float'),
-    'S': np.array([0, 1, 1, 0, 0], dtype='float'),
-    'W': np.array([1, 0, 0, 1, 0], dtype='float'),
-    'K': np.array([0, 0, 1, 1, 0], dtype='float'),
-    'M': np.array([1, 1, 0, 0, 0], dtype='float'),
-    'D': np.array([1, 0, 1, 1, 0], dtype='float'),
-    'H': np.array([1, 1, 0, 1, 0], dtype='float'),
-    'B': np.array([0, 1, 1, 1, 0], dtype='float'),
-    'V': np.array([1, 1, 1, 0, 0], dtype='float')
-    },
-
-'nuc_nogap':{
-    'A': np.array([1, 0, 0, 0], dtype='float'),
-    'C': np.array([0, 1, 0, 0], dtype='float'),
-    'G': np.array([0, 0, 1, 0], dtype='float'),
-    'T': np.array([0, 0, 0, 1], dtype='float'),
-    '-': np.array([1, 1, 1, 1], dtype='float'), # gaps are completely ignored in distance computations
-    'N': np.array([1, 1, 1, 1], dtype='float'),
-    'X': np.array([1, 1, 1, 1], dtype='float'),
-    'R': np.array([1, 0, 1, 0], dtype='float'),
-    'Y': np.array([0, 1, 0, 1], dtype='float'),
-    'S': np.array([0, 1, 1, 0], dtype='float'),
-    'W': np.array([1, 0, 0, 1], dtype='float'),
-    'K': np.array([0, 0, 1, 1], dtype='float'),
-    'M': np.array([1, 1, 0, 0], dtype='float'),
-    'D': np.array([1, 0, 1, 1], dtype='float'),
-    'H': np.array([1, 1, 0, 1], dtype='float'),
-    'B': np.array([0, 1, 1, 1], dtype='float'),
-    'V': np.array([1, 1, 1, 0], dtype='float')
-    },
-
-'aa':{
-    'A': np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Alanine         Ala
-    'C': np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Cysteine        Cys
-    'D': np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Aspartic AciD   Asp
-    'E': np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Glutamic Acid   Glu
-    'F': np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Phenylalanine   Phe
-    'G': np.array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Glycine         Gly
-    'H': np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Histidine       His
-    'I': np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Isoleucine      Ile
-    'K': np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Lysine          Lys
-    'L': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Leucine         Leu
-    'M': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Methionine      Met
-    'N': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #AsparagiNe      Asn
-    'P': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Proline         Pro
-    'Q': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Glutamine       Gln
-    'R': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #ARginine        Arg
-    'S': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], dtype='float'), #Serine          Ser
-    'T': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], dtype='float'), #Threonine       Thr
-    'V': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], dtype='float'), #Valine          Val
-    'W': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype='float'), #Tryptophan      Trp
-    'Y': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], dtype='float'), #Tyrosine        Tyr
-    '*': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype='float'), #stop
-    '-': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], dtype='float'), #gap
-    'X': np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype='float'), #not specified/any
-    'B': np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Asparagine/Aspartic Acid    Asx
-    'Z': np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Glutamine/Glutamic Acid     Glx
-    },
-
-'aa_nogap':{
-    'A': np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Alanine         Ala
-    'C': np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Cysteine        Cys
-    'D': np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Aspartic AciD   Asp
-    'E': np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Glutamic Acid   Glu
-    'F': np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Phenylalanine   Phe
-    'G': np.array([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Glycine         Gly
-    'H': np.array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Histidine       His
-    'I': np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Isoleucine      Ile
-    'K': np.array([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Lysine          Lys
-    'L': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Leucine         Leu
-    'M': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Methionine      Met
-    'N': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #AsparagiNe      Asn
-    'P': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Proline         Pro
-    'Q': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], dtype='float'), #Glutamine       Gln
-    'R': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], dtype='float'), #ARginine        Arg
-    'S': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], dtype='float'), #Serine          Ser
-    'T': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype='float'), #Threonine       Thr
-    'V': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], dtype='float'), #Valine          Val
-    'W': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], dtype='float'), #Tryptophan      Trp
-    'Y': np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1], dtype='float'), #Tyrosine        Tyr
-    'X': np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], dtype='float'), #not specified/any
-    'B': np.array([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype='float'), #Asparagine/Aspartic Acid    Asx
-    'Z': np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], dtype='float'), #Glutamine/Glutamic Acid     Glx
-    }
+alphabet_synonyms = {
+    'nuc': 'nuc', 'nucleotide': 'nuc', 'aa': 'aa', 'aminoacid': 'aa',
+    'nuc_nogap': 'nuc_nogap', 'nucleotide_nogap': 'nuc_nogap',
+    'aa_nogap': 'aa_nogap', 'aminoacid_nogap': 'aa_nogap',
+    'DNA': 'nuc', 'DNA_nogap': 'nuc_nogap'
 }
 
+alphabets = {
+    "nuc": np.array(['A', 'C', 'G', 'T', '-']),
+    "nuc_nogap": np.array(['A', 'C', 'G', 'T']),
+    "aa": np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', '*', '-']),
+    "aa_nogap": np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'])
+}
+
+def create_profile_maps():
+    nuc_profiles = {
+        'A': [1, 0, 0, 0, 0], 'C': [0, 1, 0, 0, 0], 'G': [0, 0, 1, 0, 0], 'T': [0, 0, 0, 1, 0], '-': [0, 0, 0, 0, 1],
+        'N': [1, 1, 1, 1, 1], 'X': [1, 1, 1, 1, 1], 'R': [1, 0, 1, 0, 0], 'Y': [0, 1, 0, 1, 0], 'S': [0, 1, 1, 0, 0],
+        'W': [1, 0, 0, 1, 0], 'K': [0, 0, 1, 1, 0], 'M': [1, 1, 0, 0, 0], 'D': [1, 0, 1, 1, 0], 'H': [1, 1, 0, 1, 0],
+        'B': [0, 1, 1, 1, 0], 'V': [1, 1, 1, 0, 0]
+    }
+    
+    nuc_nogap_profiles = {
+        'A': [1, 0, 0, 0], 'C': [0, 1, 0, 0], 'G': [0, 0, 1, 0], 'T': [0, 0, 0, 1], '-': [1, 1, 1, 1],
+        'N': [1, 1, 1, 1], 'X': [1, 1, 1, 1], 'R': [1, 0, 1, 0], 'Y': [0, 1, 0, 1], 'S': [0, 1, 1, 0],
+        'W': [1, 0, 0, 1], 'K': [0, 0, 1, 1], 'M': [1, 1, 0, 0], 'D': [1, 0, 1, 1], 'H': [1, 1, 0, 1],
+        'B': [0, 1, 1, 1], 'V': [1, 1, 1, 0]
+    }
+    
+    aa_order = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y', '*', '-']
+    aa_profiles = {}
+    for i, aa in enumerate(aa_order):
+        profile = [0] * 22
+        profile[i] = 1
+        aa_profiles[aa] = profile
+    
+    aa_profiles['X'] = [1] * 22
+    aa_profiles['B'] = [0] * 22
+    aa_profiles['B'][2] = 1  # D
+    aa_profiles['B'][11] = 1  # N
+    aa_profiles['Z'] = [0] * 22
+    aa_profiles['Z'][3] = 1  # E
+    aa_profiles['Z'][13] = 1  # Q
+    
+    aa_nogap_order = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
+    aa_nogap_profiles = {}
+    for i, aa in enumerate(aa_nogap_order):
+        profile = [0] * 20
+        profile[i] = 1
+        aa_nogap_profiles[aa] = profile
+    
+    aa_nogap_profiles['X'] = [1] * 20
+    aa_nogap_profiles['B'] = [0] * 20
+    aa_nogap_profiles['B'][2] = 1  # D
+    aa_nogap_profiles['B'][11] = 1  # N
+    aa_nogap_profiles['Z'] = [0] * 20
+    aa_nogap_profiles['Z'][3] = 1  # E
+    aa_nogap_profiles['Z'][13] = 1  # Q
+    
+    return {
+        'nuc': {k: np.array(v, dtype=float) for k, v in nuc_profiles.items()},
+        'nuc_nogap': {k: np.array(v, dtype=float) for k, v in nuc_nogap_profiles.items()},
+        'aa': {k: np.array(v, dtype=float) for k, v in aa_profiles.items()},
+        'aa_nogap': {k: np.array(v, dtype=float) for k, v in aa_nogap_profiles.items()}
+    }
+
+profile_maps = create_profile_maps()
 
 def extend_profile(gtr, aln, logger=None):
-    tmp_unique_chars = []
+    unique_chars = set()
     for seq in aln:
-        tmp_unique_chars.extend(np.unique(seq))
-
-    unique_chars = np.unique(tmp_unique_chars)
+        unique_chars.update(np.unique(seq))
+    
     for c in unique_chars:
         if c not in gtr.profile_map:
             gtr.profile_map[c] = np.ones(gtr.n_states)
             if logger:
-                logger("WARNING: character %s is unknown. Treating it as missing information"%c,1,warn=True)
-
+                logger(f"WARNING: character {c} is unknown. Treating it as missing information", 1, warn=True)
 
 def guess_alphabet(aln):
-    total=0
-    nuc_count = 0
-    for seq in aln:
-        total += len(seq)
-        for n in np.array(list('acgtACGT-N')):
-            nuc_count += np.sum(seq==n)
-    if nuc_count>0.9*total:
-        return 'nuc'
-    else:
-        return 'aa'
-
+    total = sum(len(seq) for seq in aln)
+    nuc_count = sum(np.sum(np.isin(seq, list('acgtACGT-N'))) for seq in aln)
+    return 'nuc' if nuc_count > 0.9 * total else 'aa'
 
 def seq2array(seq, word_length=1, convert_upper=False, fill_overhangs=False, ambiguous='N'):
-    """
-    Take the raw sequence, substitute the "overhanging" gaps with 'N' (missequenced),
-    and convert the sequence to the numpy array of chars.
-
-    Parameters
-    ----------
-    seq : Biopython.SeqRecord, str, iterable
-       Sequence as an object of SeqRecord, string or iterable
-    word_length : int, optional
-        1 for nucleotide or amino acids, 3 for codons etc.
-    convert_upper : bool, optional
-        convert the sequence to upper case
-    fill_overhangs : bool
-       If True, substitute the "overhanging" gaps with ambiguous character symbol
-    ambiguous : char
-       Specify the character for ambiguous state ('N' default for nucleotide)
-    Returns
-    -------
-    sequence : np.array
-       Sequence as 1D numpy array of chars
-    """
     if isinstance(seq, str):
         seq_str = seq
     elif isinstance(seq, Seq.Seq):
@@ -173,20 +94,19 @@ def seq2array(seq, word_length=1, convert_upper=False, fill_overhangs=False, amb
     elif isinstance(seq, SeqRecord.SeqRecord):
         seq_str = str(seq.seq)
     else:
-        raise TypeError("seq2array: sequence must be Bio.Seq, Bio.SeqRecord, or string. Got "+str(seq))
+        raise TypeError(f"seq2array: sequence must be Bio.Seq, Bio.SeqRecord, or string. Got {type(seq)}")
 
     if convert_upper:
         seq_str = seq_str.upper()
 
-    if word_length==1:
+    if word_length == 1:
         seq_array = np.array(list(seq_str))
     else:
-        if len(seq_str)%word_length:
+        if len(seq_str) % word_length:
             raise ValueError("sequence length has to be multiple of word length")
         seq_array = np.array([seq_str[i*word_length:(i+1)*word_length]
-                              for i in range(len(seq_str)/word_length)])
+                              for i in range(len(seq_str)//word_length)])
 
-    # substitute overhanging unsequenced tails
     if fill_overhangs:
         gaps = np.where(seq_array != '-')[0]
         if len(gaps):
@@ -197,96 +117,31 @@ def seq2array(seq, word_length=1, convert_upper=False, fill_overhangs=False, amb
 
     return seq_array
 
-
 def seq2prof(seq, profile_map):
-    """
-    Convert the given character sequence into the profile according to the
-    alphabet specified.
-
-    Parameters
-    ----------
-
-     seq : numpy.array
-        Sequence to be converted to the profile
-
-     profile_map : dic
-        Mapping valid characters to profiles
-
-    Returns
-    -------
-
-     idx : numpy.array
-        Profile for the character. Zero array if the character not found
-
-    """
-
     return np.array([profile_map[k] for k in seq])
 
-
 def prof2seq(profile, gtr, sample_from_prof=False, normalize=True, rng=None):
-    """
-    Convert profile to sequence and normalize profile across sites.
-
-    Parameters
-    ----------
-
-     profile : numpy 2D array
-        Profile. Shape of the profile should be (L x a), where L - sequence
-        length, a - alphabet size.
-     gtr : gtr.GTR
-        Instance of the GTR class to supply the sequence alphabet
-     collapse_prof : bool
-        Whether to convert the profile to the delta-function
-
-    Returns
-    -------
-     seq : numpy.array
-        Sequence as numpy array of length L
-     prof_values :  numpy.array
-        Values of the profile for the chosen sequence characters (length L)
-     idx : numpy.array
-        Indices chosen from profile as array of length L
-    """
     if rng is None:
         rng = np.random.default_rng()
-    # normalize profile such that probabilities at each site sum to one
+    
     if normalize:
-        tmp_profile, pre=normalize_profile(profile, return_offset=False)
+        tmp_profile, _ = normalize_profile(profile, return_offset=False)
     else:
         tmp_profile = profile
 
-    # sample sequence according to the probabilities in the profile
-    # (sampling from cumulative distribution over the different states)
     if sample_from_prof:
         cumdis = tmp_profile.cumsum(axis=1).T
         randnum = rng.random(size=cumdis.shape[1])
-        idx = np.argmax(cumdis>=randnum, axis=0)
+        idx = np.argmax(cumdis >= randnum, axis=0)
     else:
         idx = tmp_profile.argmax(axis=1)
-    seq = gtr.alphabet[idx]  # max LH over the alphabet
-
+    
+    seq = gtr.alphabet[idx]
     prof_values = tmp_profile[np.arange(tmp_profile.shape[0]), idx]
-
+    
     return seq, prof_values, idx
 
-
-def normalize_profile(in_profile, log=False, return_offset = True):
-    """return a normalized version of a profile matrix
-
-    Parameters
-    ----------
-    in_profile : np.array
-        shape Lxq, will be normalized to one across each row
-    log : bool, optional
-        treat the input as log probabilities
-    return_offset : bool, optional
-        return the log of the scale factor for each row
-
-    Returns
-    -------
-    tuple
-        normalized profile (fresh np object) and offset (if return_offset==True)
-    """
+def normalize_profile(in_profile, log=False, return_offset=True):
     if log:
         tmp_prefactor = in_profile.max(axis=1)
         tmp_prof = np.exp(in_profile.T - tmp_prefactor).T
@@ -295,6 +150,71 @@ def normalize_profile(in_profile, log=False, return_offset = True):
         tmp_prof = in_profile
 
     norm_vector = tmp_prof.sum(axis=1)
-    return (np.einsum('ai,a->ai',tmp_prof,1.0/norm_vector),
-            (np.log(norm_vector) + tmp_prefactor) if return_offset else None)
+    normalized = np.einsum('ai,a->ai', tmp_prof, 1.0/norm_vector)
+    
+    if return_offset:
+        offset = np.log(norm_vector) + tmp_prefactor
+        return normalized, offset
+    else:
+        return normalized, None
 
+def process_sparse_alignment(aln, ref, ambiguous_char):
+    nseq = len(aln)
+    inv_map = defaultdict(list)
+    
+    for k, v in aln.items():
+        for pos, bs in v.items():
+            inv_map[pos].append(bs)
+
+    nonref_positions = np.sort(list(inv_map.keys()))
+    constant_up_to_ambiguous = []
+    nonref_const = []
+    nonref_alleles = []
+    ambiguous_const = []
+    variable_pos = []
+    
+    for pos, bs in inv_map.items():
+        bases = list(np.unique(bs))
+        if len(bs) == nseq:
+            if (len(bases) <= 2 and ambiguous_char in bases) or len(bases) == 1:
+                nonref_const.append(pos)
+                if len(bases) == 1:
+                    nonref_alleles.append(bases[0])
+                else:
+                    nonref_alleles.append([x for x in bases if x != ambiguous_char][0])
+                
+                if ambiguous_char in bases:
+                    constant_up_to_ambiguous.append(pos)
+            else:
+                variable_pos.append(pos)
+        else:
+            if len(bases) == 1 and bases[0] == ambiguous_char:
+                ambiguous_const.append(pos)
+                constant_up_to_ambiguous.append(pos)
+            else:
+                variable_pos.append(pos)
+
+    refMod = np.copy(ref)
+    refMod[nonref_const] = nonref_alleles
+    states = np.unique(refMod)
+    refMod[variable_pos] = '.'
+
+    constant_columns = []
+    constant_patterns = {}
+    
+    for base in states:
+        if base == ambiguous_char:
+            continue
+        p = np.repeat(base, nseq)
+        pos = list(np.where(refMod == base)[0])
+        if len(pos):
+            constant_patterns["".join(p.astype('U'))] = [len(constant_columns), pos]
+            constant_columns.append(p)
+
+    return {
+        "constant_columns": constant_columns,
+        "constant_patterns": constant_patterns,
+        "variable_positions": variable_pos,
+        "nonref_positions": nonref_positions,
+        "constant_up_to_ambiguous": constant_up_to_ambiguous
+    }
